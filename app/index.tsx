@@ -22,8 +22,8 @@ export default function Index() {
         </View>
         <Text style={styles.homeHeadWord}>Regardez !</Text>
       </View>
-      {/* <Home /> */}
-      <LoginHome />
+      <Home />
+      {/* <LoginHome /> */}
     </View>
   );
 }
