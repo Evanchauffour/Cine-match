@@ -1,15 +1,36 @@
 import { Text, SafeAreaView, StyleSheet, View } from 'react-native'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import Buttons from './Button';
+import { router } from 'expo-router';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function Header() {
+  
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        if (token) {
+          setIsAuthenticated(true);
+        } else {
+          setIsAuthenticated(false);
+        }
+      } catch (error) {
+        console.error('Erreur lors de la vérification de l\'authentification:', error);
+      }
+    };
+
+    checkAuth();
+  }, []);
   return (
     <SafeAreaView style={styles.container}>
         <View style={styles.logo}>
             <Text style={styles.text1}>Cine</Text>
             <Text style={styles.text2}>Match</Text>
         </View>
-        <Buttons title="Profile" onPress={() => console.log('Profile')} />
+        {isAuthenticated && <Buttons title="Profile" onPress={() => router.push('/profile')} />}
     </SafeAreaView>
   )
 }

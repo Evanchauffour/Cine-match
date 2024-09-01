@@ -33,6 +33,13 @@ export default function RootLayout() {
         }}
       />
       <Stack.Screen 
+        name="auth" 
+        options={{
+          headerShown: true,
+          header: () => <Header />
+        }}
+      />
+      <Stack.Screen 
         name="login" 
         options={{
           headerShown: true,
@@ -40,11 +47,19 @@ export default function RootLayout() {
           headerBackTitleVisible: false,
         }}
       />
-            <Stack.Screen 
+      <Stack.Screen 
         name="register" 
         options={{
           headerShown: true,
           title: "Inscription",
+          headerBackTitleVisible: false,
+        }}
+      />
+      <Stack.Screen 
+        name="profile" 
+        options={{
+          headerShown: true,
+          title: "Profile",
           headerBackTitleVisible: false,
         }}
       />
