@@ -72,7 +72,15 @@ export default function Profile() {
       <View style={styles.personalInfos}>
         <Text style={styles.item}>{userInfo.username}</Text>
         <Text style={styles.item}>{userInfo.email}</Text>
-        <Buttons title="Modifier le profil" onPress={() => { /* Ajouter la logique pour modifier le profil */ }} />
+        <Buttons 
+        title="Modifier le profil"          
+        onPress={() => router.push({
+            pathname: '/editProfile',
+            params: {
+              username: userInfo.username,
+              email: userInfo.email
+            }
+          })} />
       </View>
       <Buttons title="Se déconnecter" onPress={handleLogout} />
     </SafeAreaView>

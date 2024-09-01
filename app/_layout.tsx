@@ -63,6 +63,14 @@ export default function RootLayout() {
           headerBackTitleVisible: false,
         }}
       />
+      <Stack.Screen 
+        name="editProfile" 
+        options={{
+          headerShown: true,
+          headerTitle: "Modifier le profil",
+          headerBackTitleVisible: false,
+        }}
+      />
     </Stack>
   );
 }
