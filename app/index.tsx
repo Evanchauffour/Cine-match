@@ -1,6 +1,6 @@
-import Home from "@/components/Home";
-import LoginHome from "@/components/LoginHome";
+import Buttons from "@/components/Button";
 import { View, StyleSheet, Text } from "react-native";
+import { router } from "expo-router";
 
 export default function Index() {
   return (
@@ -22,8 +22,19 @@ export default function Index() {
         </View>
         <Text style={styles.homeHeadWord}>Regardez !</Text>
       </View>
-      <Home />
-      {/* <LoginHome /> */}
+      <View style={{marginHorizontal: 25}}>
+        <Text style={styles.mainText}>Rejoignez <Text style={{fontFamily: 'Poppins-bold'}}>MovieMatch</Text> pour des soirées cinéma entre amis.</Text>
+        <View style={{ 
+          display: "flex", 
+          flexDirection: "column", 
+          justifyContent: "space-between", 
+          marginTop: 80,
+          gap: 15
+        }}>
+          <Buttons title="Se connecter" onPress={() => router.push('/login')} />
+          <Buttons title="S'inscrire" onPress={() => router.push('/register')}  />
+        </View>
+      </View>
     </View>
   );
 }
@@ -48,7 +59,15 @@ const styles = StyleSheet.create({
     fontFamily: "Poppins-bold",
     color: "white",
     backgroundColor: "#831FE8",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-  }
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    overflow: "hidden",
+  },
+  mainText: {
+    fontSize: 24,
+    fontFamily: "Poppins",
+    color: "black",
+    textAlign: "center",
+}
 });

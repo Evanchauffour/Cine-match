@@ -25,6 +25,29 @@ export default function RootLayout() {
           header: () => <Header />
         }}
       />
+      <Stack.Screen 
+        name="home" 
+        options={{
+          headerShown: true,
+          header: () => <Header />
+        }}
+      />
+      <Stack.Screen 
+        name="login" 
+        options={{
+          headerShown: true,
+          title: "Connexion",
+          headerBackTitleVisible: false,
+        }}
+      />
+            <Stack.Screen 
+        name="register" 
+        options={{
+          headerShown: true,
+          title: "Inscription",
+          headerBackTitleVisible: false,
+        }}
+      />
     </Stack>
   );
 }

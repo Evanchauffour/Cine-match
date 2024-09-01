@@ -6,7 +6,7 @@ export default function Header() {
   return (
     <SafeAreaView style={styles.container}>
         <View style={styles.logo}>
-            <Text style={styles.text1}>Movie</Text>
+            <Text style={styles.text1}>Cine</Text>
             <Text style={styles.text2}>Match</Text>
         </View>
         <Buttons title="Profile" onPress={() => console.log('Profile')} />
