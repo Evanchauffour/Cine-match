@@ -30,7 +30,7 @@ export default function Header() {
             <Text style={styles.text1}>Cine</Text>
             <Text style={styles.text2}>Match</Text>
         </View>
-        {isAuthenticated && <Buttons title="Profile" onPress={() => router.push('/profile')} />}
+        {isAuthenticated && <Buttons title="Profil" onPress={() => router.push('/profile')} />}
     </SafeAreaView>
   )
 }

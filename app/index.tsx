@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { View, ActivityIndicator } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, SafeAreaView, StyleSheet } from 'react-native';
+import isTokenAvailable from '../utils/token';
 import { router } from 'expo-router';
 
 export default function App() {
@@ -8,18 +8,13 @@ export default function App() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      try {
-        const token = await AsyncStorage.getItem('token');
-        if (token) {
-          router.push('/home');
-        } else {
-          router.push('/auth');
-        }
-      } catch (error) {
-        console.error('Erreur lors de la vérification de l\'authentification:', error);
-      } finally {
-        setLoading(false);
+      const tokenIsValid = await isTokenAvailable();
+      if (tokenIsValid) {
+        router.push('/home');
+      } else {
+        router.push('/auth');
       }
+      setLoading(false);
     };
 
     checkAuth();
@@ -27,11 +22,19 @@ export default function App() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#0000ff" />
-      </View>
+      <SafeAreaView style={styles.container}>
+        <ActivityIndicator size="large" color="#831FE8" />
+      </SafeAreaView>
     );
   }
 
   return null;
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+});

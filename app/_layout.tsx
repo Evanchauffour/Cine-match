@@ -59,7 +59,7 @@ export default function RootLayout() {
         name="profile" 
         options={{
           headerShown: true,
-          title: "Profile",
+          title: "Profil",
           headerBackTitleVisible: false,
         }}
       />
