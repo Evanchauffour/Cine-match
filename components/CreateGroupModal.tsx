@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, Modal, Pressable, Image, StyleSheet, TextInput, Keyboard } from 'react-native';
+import { View, Text, Modal, Pressable, Image, StyleSheet, TextInput, Keyboard, Alert } from 'react-native';
 import Button from './Button';
 import RadioGroup from 'react-native-radio-buttons-group';
 import * as Clipboard from 'expo-clipboard';
@@ -33,7 +33,7 @@ const CreateGroupModal: React.FC<CreateGroupModalProps> = ({ isModalVisible, onC
 
     const copyToClipboard = () => {
         Clipboard.setStringAsync('XAFT2RDAFM');
-        alert('Code copié dans le presse-papiers!');
+        Alert.alert('Code copié dans le presse-papiers!');
     };
 
     return (

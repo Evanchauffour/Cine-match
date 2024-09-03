@@ -2,38 +2,42 @@ import React, { useState } from 'react';
 import { View, Text, Pressable, Keyboard, StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native';
 import Buttons from '@/components/Button';
 import { router } from 'expo-router';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { auth } from '../firebaseConfig';
 
 export default function Register() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleRegister = async () => {
-    if (!username || !email || !password) {
-      Alert.alert('Erreur', 'Veuillez remplir tous les champs');
+
+  const handleSignup = async () => {
+
+    if (!email || !password) {
+      Alert.alert('Veuillez remplir tous les champs');
       return;
     }
 
+    if (password.length < 6) {
+      Alert.alert('Le mot de passe doit contenir au moins 6 caractères.');
+      return;
+    }
+    
     try {
-      const response = await fetch('http://localhost:4000/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, email, password }),
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      await updateProfile(user, {
+        displayName: username,
       });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        Alert.alert('Succès', 'Inscription réussie !');
-        router.push('/login');
+      Alert.alert('Succès', 'Inscription réussie !');
+      router.push('/home');
+    } catch (error: any) {
+      if (error.code === 'auth/email-already-in-use') {
+        Alert.alert('L\'email est déjà utilisé.');
       } else {
-        Alert.alert('Erreur', data.message || 'Une erreur est survenue lors de l\'inscription');
+        console.error('Signup error:', error.message);
       }
-    } catch (error) {
-      console.error('Erreur lors de l\'inscription:', error);
-      Alert.alert('Erreur', 'Impossible de se connecter au serveur. Veuillez réessayer plus tard.');
     }
   };
 
@@ -57,6 +61,7 @@ export default function Register() {
           value={email}
           onChangeText={setEmail}
           keyboardType="email-address"
+          autoCapitalize="none"
         />
         <TextInput
           style={styles.input}
@@ -65,7 +70,7 @@ export default function Register() {
           onChangeText={setPassword}
           secureTextEntry={true}
         />
-        <Buttons title="S'inscrire" onPress={handleRegister} buttonStyle={styles.loginButton} />
+        <Buttons title="S'inscrire" onPress={handleSignup} buttonStyle={styles.loginButton} />
         <View style={styles.notHaveAccountContainer}>
           <Text style={styles.notHaveAccountText}>
             Vous avez déjà un compte ? 

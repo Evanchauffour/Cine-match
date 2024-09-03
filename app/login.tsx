@@ -2,7 +2,8 @@ import { View, Text, Pressable, Keyboard, StyleSheet, TextInput, TouchableOpacit
 import React, { useState } from 'react'
 import Buttons from '@/components/Button';
 import { router } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../firebaseConfig';
 
 export default function login() {
 
@@ -10,33 +11,18 @@ export default function login() {
   const [password, setPassword] = useState('');
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Erreur', 'Veuillez remplir tous les champs');
-      return;
-    }
-
-    try {
-      const response = await fetch('http://localhost:4000/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        Alert.alert('Succès', 'Connexion réussie !');
-        await AsyncStorage.setItem('token', data.token);
-        router.push('/home');
+    signInWithEmailAndPassword(auth, email, password)
+    .then(() => {
+      Alert.alert('Succès', 'Connexion réussie !');
+      router.push('/home');
+    })
+    .catch((error) => {
+      if(error.code === 'auth/invalid-credential' || error.code === 'auth/invalid-email') {
+        Alert.alert('Email ou mot de passe incorrect');
       } else {
-        Alert.alert('Erreur', data.message || 'Une erreur est survenue lors de la connexion');
+        console.error('Signin error:', error.message);
       }
-    } catch (error) {
-      console.error('Erreur lors de la connexion:', error);
-      Alert.alert('Erreur', 'Impossible de se connecter au serveur. Veuillez réessayer plus tard.');
-    }
+    });
   };
 
   return (
@@ -52,12 +38,15 @@ export default function login() {
             placeholder="Email"
             value={email}
             onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
         />
         <TextInput
             style={styles.input}
             placeholder="Mot de passe"
             value={password}
             onChangeText={setPassword}
+            secureTextEntry
         />
         <TouchableOpacity>
             <Text>Mot de passe oublié ?</Text>

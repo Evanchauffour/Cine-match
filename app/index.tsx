@@ -1,23 +1,22 @@
+import { auth } from '@/firebaseConfig';
+import { router } from 'expo-router';
+import { onAuthStateChanged } from 'firebase/auth';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, SafeAreaView, StyleSheet } from 'react-native';
-import isTokenAvailable from '../utils/token';
-import { router } from 'expo-router';
 
 export default function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const tokenIsValid = await isTokenAvailable();
-      if (tokenIsValid) {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setLoading(false);
+      if(currentUser) {
         router.push('/home');
       } else {
         router.push('/auth');
       }
-      setLoading(false);
-    };
-
-    checkAuth();
+    });
+    return () => unsubscribe();
   }, []);
 
   if (loading) {

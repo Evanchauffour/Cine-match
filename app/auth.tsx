@@ -23,7 +23,7 @@ export default function Auth() {
         <Text style={styles.homeHeadWord}>Regardez !</Text>
       </View>
       <View style={{marginHorizontal: 25}}>
-        <Text style={styles.mainText}>Rejoignez <Text style={{fontFamily: 'Poppins-bold'}}>MovieMatch</Text> pour des soirées cinéma entre amis.</Text>
+        <Text style={styles.mainText}>Rejoignez <Text style={{fontFamily: 'Poppins-bold'}}>CineMatch</Text> pour des soirées cinéma entre amis.</Text>
         <View style={{ 
           display: "flex", 
           flexDirection: "column", 

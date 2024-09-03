@@ -13,7 +13,7 @@ export default function Home() {
     <View style={{ marginHorizontal: 25 }}>
         <View style={{zIndex: -10}}>
             <Text style={styles.mainText}>
-                Pour commencer avec <Text style={{ fontFamily: 'Poppins-bold' }}>MovieMatch</Text> créer ou rejoignez un groupe
+                Pour commencer avec <Text style={{ fontFamily: 'Poppins-bold' }}>CineMatch</Text> créer ou rejoignez un groupe
             </Text>
             <View style={styles.buttonContainer}>
                 <Buttons 
