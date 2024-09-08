@@ -71,6 +71,17 @@ export default function RootLayout() {
           headerBackTitleVisible: false,
         }}
       />
+      <Stack.Screen 
+        name="game" 
+      />
+      <Stack.Screen 
+        name="createGroup" 
+        options={{
+          headerShown: true,
+          headerTitle: "Créer un groupe",
+          headerBackTitleVisible: false,
+        }}
+      />
     </Stack>
   );
 }

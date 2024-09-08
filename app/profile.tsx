@@ -30,7 +30,7 @@ export default function Profile() {
       <View style={styles.personalInfos}>
         <Text style={styles.item}>{user?.displayName}</Text>
         <Text style={styles.item}>{user?.email}</Text>
-        <Buttons 
+        {/* <Buttons 
         title="Modifier le profil"          
         onPress={() => router.push({
             pathname: '/editProfile',
@@ -38,7 +38,7 @@ export default function Profile() {
               username: user?.displayName,
               email: user?.email
             }
-          })} />
+          })} /> */}
       </View>
       <Buttons title="Se déconnecter" onPress={handleLogout} />
     </SafeAreaView>
