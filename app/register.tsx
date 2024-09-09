@@ -3,7 +3,8 @@ import { View, Text, Pressable, Keyboard, StyleSheet, TextInput, TouchableOpacit
 import Buttons from '@/components/Button';
 import { router } from 'expo-router';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { auth } from '../firebaseConfig';
+import { auth, db } from '../firebaseConfig';
+import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 
 export default function Register() {
   const [username, setUsername] = useState('');
@@ -17,29 +18,38 @@ export default function Register() {
       Alert.alert('Veuillez remplir tous les champs');
       return;
     }
-
+  
     if (password.length < 6) {
       Alert.alert('Le mot de passe doit contenir au moins 6 caractères.');
       return;
     }
-    
+  
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-
+  
       await updateProfile(user, {
         displayName: username,
       });
+  
+      await setDoc(doc(db, 'users', user.uid), {
+        uid: user.uid,
+        username: username,
+        email: user.email,
+        createdAt: serverTimestamp(),
+      });
+  
       Alert.alert('Succès', 'Inscription réussie !');
       router.push('/home');
     } catch (error: any) {
       if (error.code === 'auth/email-already-in-use') {
-        Alert.alert('L\'email est déjà utilisé.');
+        Alert.alert("L'email est déjà utilisé.");
       } else {
         console.error('Signup error:', error.message);
       }
     }
   };
+  
 
   return (
     <Pressable

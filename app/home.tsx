@@ -1,6 +1,6 @@
 import Buttons from "@/components/Button";
-import CreateGroupModal from "@/components/CreateGroupModal";
 import JoinGroupModal from "@/components/JoinGroupModal";
+import { router } from "expo-router";
 import { useState } from "react";
 import { View, StyleSheet, Text } from "react-native";
 
@@ -37,20 +37,20 @@ export default function Home() {
             <View style={styles.buttonContainer}>
                 <Buttons
                     title="Créer un groupe"
-                    onPress={() => setCreateGroupModalVisible(true)}
+                    onPress={() => router.push('/createGroup')}
                 />
                 <Buttons
                 title="Rejoindre un groupe"
                 onPress={() => setJoinGroupModalVisible(true)}
                 />
+                <Buttons
+                title="Game test"
+                onPress={() => router.push('/game')}
+                />
             </View>
         </View>
     </View>
     </View>
-      <CreateGroupModal
-        isModalVisible={createGroupModalVisible}
-        onClose={() => setCreateGroupModalVisible(false)}
-      />
       <JoinGroupModal
           isModalVisible={joinGroupModalVisible}
           onClose={() => setJoinGroupModalVisible(false)}

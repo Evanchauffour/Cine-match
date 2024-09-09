@@ -1,6 +1,8 @@
 import { View, Text, Modal, Pressable, Image, StyleSheet, TextInput, Keyboard } from 'react-native';
 import React, { useEffect, useRef } from 'react';
 import Buttons from './Button';
+import { joinRoom } from '@/utils/room';
+import { router } from 'expo-router';
 
 interface JoinGroupModalProps {
     isModalVisible: boolean;
@@ -9,12 +11,28 @@ interface JoinGroupModalProps {
 
 const JoinGroupModal: React.FC<JoinGroupModalProps> = ({ isModalVisible, onClose }) => {
     const inputRef = useRef<TextInput>(null);
+    const [roomCode, setRoomCode] = React.useState<string>('');
 
     useEffect(() => {
         if (isModalVisible) {
             inputRef.current?.focus();
         }
     }, [isModalVisible]);
+
+    const handleJoinRoom = async () => { 
+        const roomId = await joinRoom(roomCode);
+
+        if (roomId) {
+            router.push({
+                pathname: '/createGroup',
+                params: {
+                  roomIdToJoin: roomId
+                }
+              });
+        } else {
+            console.log('Aucune room trouvée.');
+        }
+    }
 
     return (
         <Modal visible={isModalVisible} transparent={true}>
@@ -34,8 +52,10 @@ const JoinGroupModal: React.FC<JoinGroupModalProps> = ({ isModalVisible, onClose
                         ref={inputRef}
                         autoCapitalize='characters'
                         textAlign='center'
+                        value={roomCode}
+                        onChangeText={setRoomCode}
                     />
-                    <Buttons title="Rejoindre" onPress={() => {}} />
+                    <Buttons title="Rejoindre" onPress={handleJoinRoom} />
                 </View>
             </Pressable>
         </Modal>
