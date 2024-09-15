@@ -7,13 +7,15 @@ interface ButtonsProps {
   onPress: () => void;
   buttonStyle?: ViewStyle;
   textStyle?: TextStyle;
+  disabled?: boolean;
 }
 
-const Buttons: React.FC<ButtonsProps> = ({ title, onPress, buttonStyle, textStyle }) => {
+const Buttons: React.FC<ButtonsProps> = ({ title, onPress, buttonStyle, textStyle , disabled}) => {
   return (
     <TouchableOpacity
-      style={[styles.button, buttonStyle]}
+      style={[styles.button, disabled && styles.disabled, buttonStyle]}
       onPress={onPress}
+      disabled={disabled}
     >
       <Text style={[styles.text, textStyle]}>{title}</Text>
     </TouchableOpacity>
@@ -32,6 +34,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 3.84,
     elevation: 5,
+  },
+  disabled: {
+    opacity: 0.5,
   },
   text: {
     color: 'black',

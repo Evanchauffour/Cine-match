@@ -27,10 +27,7 @@ export async function createRoom(userId, category) {
         isReady: false
     });
 
-    console.log(roomRef.id);
-    
-
-    return getRoomDetails(roomRef.id);
+    return roomRef.id;
 }
 
 export async function joinRoom(code) {
@@ -64,32 +61,22 @@ export async function joinRoom(code) {
     }
 }
 
-export async function getRoomDetails(roomId) {
+
+export async function updateRoomDb(roomId, updates) {
+    console.log(updates);
+    
     try {
         const roomRef = doc(db, 'rooms', roomId);
-        const roomSnapshot = await getDoc(roomRef);
 
-        if (roomSnapshot.exists()) {
-            const roomData = roomSnapshot.data();
-            return { ...roomData, roomId: roomSnapshot.id };
-        } else {
-            console.log('No room found with this ID.');
-            return null;
-        }
-    } catch (error) {
-        console.error('Error retrieving room details:', error);
-        return null;
-    }
-}
-
-export async function updateRoom(roomId, category) {
-    try {
-        const roomRef = doc(db, 'rooms', roomId);
-        await updateDoc(roomRef, { category });
+        await updateDoc(roomRef, updates);
+        console.log('Room updated successfully.');
+        
     } catch (error) {
         console.error('Error updating room:', error);
+        throw new Error('Impossible de mettre à jour la room.');
     }
 }
+
 
 export function getGroupUsers(roomId, callback) {
     const q = query(collection(db, 'users_room'), where('roomId', '==', roomId));

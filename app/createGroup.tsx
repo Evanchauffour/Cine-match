@@ -1,20 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, Pressable, StyleSheet, Keyboard, Alert } from 'react-native';
 import Button from '../components/Button';
-import RadioGroup from 'react-native-radio-buttons-group';
+import { RadioButton } from 'react-native-radio-buttons-group';
 import * as Clipboard from 'expo-clipboard';
-import { createRoom, getGroupUsers, getRoomDetails, updateRoom } from '../utils/room';
+import { createRoom, getGroupUsers, updateRoomDb } from '../utils/room';
 import { auth } from '../firebaseConfig';
-import { useLocalSearchParams } from 'expo-router';
-
-interface RoomDetails {
-    roomId?: string;
-    code?: string;
-    category?: string;
-    createdBy?: string;
-    isActive?: boolean;
-    createdAt?: any;
-}
+import { router, useLocalSearchParams } from 'expo-router';
+import useRoomDetails from '../utils/useRoomDetails';
 
 interface User {
     uid: string;
@@ -23,32 +15,31 @@ interface User {
 
 const CreateGroup: React.FC = () => {
     const [selectedId, setSelectedId] = useState<string | undefined>('1');
-    const [roomDetails, setRoomDetails] = useState<RoomDetails>({});
     const [groupUsers, setGroupUsers] = useState<User[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const params = useLocalSearchParams();
     const { roomIdToJoin } = params;
-
-    const radioButtons = useMemo(() => ([
-        { id: '1', label: 'Films', value: 'Films' },
-        { id: '2', label: 'Séries', value: 'Séries' }
-    ]), []);
+    const [currentUser, setCurrentUser] = useState<any>(null);
+    const [roomId, setRoomId] = useState<string | undefined>(roomIdToJoin);
+    
+    const { roomDetails, loading: roomLoading, error: roomError } = useRoomDetails(roomId || '');
 
     useEffect(() => {
         const fetchRoomDetails = async () => {
             setLoading(true);
             try {
-                if (roomIdToJoin) {         
-                    const room = await getRoomDetails(roomIdToJoin);
-                    setRoomDetails(room || {});
+                if (roomIdToJoin) {
+                    setRoomId(roomIdToJoin);
                 } else {
                     if (!auth.currentUser) {
                         throw new Error('Utilisateur non authentifié');
                     }
-                    console.log('createRoom');
+                    setCurrentUser(auth.currentUser);
                     
                     const room = await createRoom(auth.currentUser.uid, selectedId || '1');
-                    setRoomDetails(room || {});
+                    console.log('room', room);
+                    
+                    setRoomId(room);
                 }
             } catch (error) {
                 Alert.alert('Erreur', 'Impossible de récupérer les détails de la room.');
@@ -61,26 +52,43 @@ const CreateGroup: React.FC = () => {
     }, []);
 
     useEffect(() => {
-        if (!roomDetails.roomId) return;
+        if (!roomId) return;
 
-        const unsubscribe = getGroupUsers(roomDetails.roomId, (users: User[]) => {
+        const unsubscribe = getGroupUsers(roomId, (users: User[]) => {
             setGroupUsers(users);
         });
 
         return () => unsubscribe();
-    }, [roomDetails.roomId]);
+    }, [roomId]);
+
+    useEffect(() => {
+        if(roomDetails?.isActive) {
+            router.push({
+                pathname: '/game',
+                params: {
+                  roomId: roomId
+                }
+              });
+        }
+    }, [roomDetails?.isActive]);
+
+    const updateRoom = async (roomId: string, selectedId: string, isActive: boolean) => {
+        try {
+            const updates = {
+                category: selectedId,
+                isActive: isActive,
+            };
+    
+            await updateRoomDb(roomId, updates);
+        } catch (error) {
+            Alert.alert('Erreur', 'Impossible de mettre à jour la room.');
+        }
+    };
+    
 
     const copyToClipboard = () => {
-        Clipboard.setStringAsync(roomDetails.code || '');
+        Clipboard.setStringAsync(roomDetails?.code || '');
         Alert.alert('Code copié dans le presse-papiers!');
-    };
-
-    const handleStart = async () => {
-        try {
-            // Implémenter la logique pour démarrer le groupe
-        } catch (error) {
-            Alert.alert('Erreur', 'Il y a eu un problème lors du démarrage.');
-        }
     };
 
     return (
@@ -93,17 +101,35 @@ const CreateGroup: React.FC = () => {
             <View style={{ marginTop: 40 }}>
                 <View style={styles.section}>
                     <Text style={styles.headText}>Séries / Films</Text>
-                    <RadioGroup
-                        radioButtons={radioButtons}
-                        onPress={(selectedId: string) => setSelectedId(selectedId)}
-                        selectedId={selectedId}
-                        layout='row'
+                    <RadioButton
+                        onPress={() => {
+                            if (roomId) {
+                                updateRoom(roomId, '1', false);
+                            }
+                        }}
+                        id='1'
+                        selected={roomDetails?.category === '1'}
+                        label='Films'
+                        value='1'
+                        disabled={currentUser?.uid !== roomDetails?.createdBy}
+                    />
+                    <RadioButton
+                        onPress={() => {
+                            if (roomId) {
+                                updateRoom(roomId, '2', false);
+                            }
+                        }}
+                        id='2'
+                        selected={roomDetails?.category === '2'}
+                        label='Séries'
+                        value='2'
+                        disabled={currentUser?.uid !== roomDetails?.createdBy}
                     />
                 </View>
                 <View style={styles.section}>
                     <Text style={styles.headText}>Code du groupe</Text>
                     <View style={styles.codeContainer}>
-                        <Text style={styles.code}>{roomDetails.code || 'N/A'}</Text>
+                        <Text style={styles.code}>{roomDetails?.code || 'N/A'}</Text>
                     </View>
                     <Button
                         title="Copier le code"
@@ -115,7 +141,7 @@ const CreateGroup: React.FC = () => {
                 <View style={styles.section}>
                     <Text style={styles.headText}>Utilisateurs du groupe</Text>
                     <View>
-                        {loading ? (
+                        {roomLoading ? (
                             <Text>Chargement...</Text>
                         ) : groupUsers.length > 0 ? (
                             groupUsers.map(user => (
@@ -127,7 +153,15 @@ const CreateGroup: React.FC = () => {
                     </View>
                 </View>
             </View>
-            <Button title="Commencer" onPress={handleStart} />
+            <Button 
+                title="Commencer" 
+                onPress={() => {
+                    if (roomId) {
+                        updateRoom(roomId, roomDetails?.category, true);
+                    }
+                }}             
+                disabled={currentUser?.uid !== roomDetails?.createdBy}
+            />
         </Pressable>
     );
 };
