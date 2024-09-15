@@ -1,0 +1,104 @@
+import { db } from '../firebaseConfig';
+import { collection, query, where, updateDoc, doc, getDocs } from 'firebase/firestore';
+
+export async function addLikedMovie(userId, roomId, movie) {
+    console.log('liked movie');
+    
+    
+    try {
+        const usersRoomRef = collection(db, 'users_room');
+        
+        const q = query(usersRoomRef, where('userId', '==', userId), where('roomId', '==', roomId));
+        
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            throw new Error('Document correspondant non trouvé pour les paramètres spécifiés');
+        }
+
+        const docSnap = querySnapshot.docs[0];
+        const docRef = doc(db, 'users_room', docSnap.id);
+
+        const userRoomData = docSnap.data();
+        const matchedMovies = userRoomData.matchedMovies || [];
+
+        matchedMovies.push(movie);
+
+        await updateDoc(docRef, { matchedMovies });
+
+        console.log('Film ajouté avec succès:', movie);
+        
+    } catch (error) {
+        console.error('Erreur lors de l\'ajout du film:', error);
+    }
+}
+
+export async function getMatch(roomId) {
+    console.log('Checking for matches...');
+    
+    try {
+        const usersRoomRef = collection(db, 'users_room');
+        
+        const q = query(usersRoomRef, where('roomId', '==', roomId));
+        
+        const querySnapshot = await getDocs(q);
+
+        if (querySnapshot.empty) {
+            throw new Error('Aucun utilisateur trouvé dans cette room');
+        }
+
+        const usersRoom = querySnapshot.docs.map(doc => doc.data());
+        
+        const matchedMovies = usersRoom.map(userRoom => userRoom.matchedMovies).filter(matchedMovies => matchedMovies);
+        
+        const commonMovies = matchedMovies.reduce((acc, val) => acc.filter(v => val.includes(v)));
+        
+        console.log('commonMovies: ' + JSON.stringify(commonMovies));
+        
+        return commonMovies;
+    } catch (error) {
+        console.error('Erreur lors de la vérification des correspondances:', error);
+        return [];
+    }
+}
+
+export async function checkMatch(roomId, likedMovieId, userId) {
+    console.log('check match');
+    
+    try {
+        const usersRoomRef = collection(db, 'users_room');
+        
+        const q = query(
+            usersRoomRef, 
+            where('roomId', '==', roomId),
+            where('userId', '!=', userId)
+        );
+        
+        const querySnapshot = await getDocs(q);
+        
+        if (querySnapshot.empty) {
+            console.log('Aucun autre utilisateur trouvé dans cette room.');
+            return false;
+        }
+        
+        const usersRoom = querySnapshot.docs.map(doc => doc.data());
+
+        for (const userRoom of usersRoom) {
+            const matchedMovies = userRoom.matchedMovies || [];
+            console.log('matchedMovies: ' + JSON.stringify(matchedMovies));
+            
+            const movieMatched = matchedMovies.some(movie => movie.id === likedMovieId);
+            
+            if (movieMatched) {
+                console.log(`Le film avec l'ID ${likedMovieId} est déjà liké par un autre utilisateur.`);
+                return true;
+            }
+        }
+
+        console.log('Pas de correspondance trouvée pour ce film.');
+        return false;
+    } catch (error) {
+        console.error('Erreur lors de la vérification des correspondances de film:', error);
+        return false;
+    }
+}

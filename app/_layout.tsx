@@ -73,6 +73,11 @@ export default function RootLayout() {
       />
       <Stack.Screen 
         name="game" 
+        options={{
+          headerShown: true,
+          headerTitle: "Match",
+          headerBackTitleVisible: false,
+        }}
       />
       <Stack.Screen 
         name="createGroup" 
