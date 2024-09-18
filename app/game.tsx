@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, StyleSheet, Animated, PanResponder, SafeAreaView, TouchableOpacity, Text, Image, Alert } from 'react-native';
+import { View, StyleSheet, Animated, PanResponder, SafeAreaView, TouchableOpacity, Text, Image, Alert, Modal, Pressable, Keyboard } from 'react-native';
 import { addLikedMovie, checkMatch } from '../utils/game';
 import { auth } from '@/firebaseConfig';
 import { useLocalSearchParams } from 'expo-router';
+import Buttons from '@/components/Button';
+import LottieView from 'lottie-react-native';
 
 export default function Game() {
     const [cards, setCards] = useState<{ id: number; title: string; img: string }[]>([]);
@@ -11,6 +13,8 @@ export default function Game() {
     const [isCanSwipe, setIsCanSwipe] = useState(true);
     const [currentUser, setCurrentUser] = useState<any>(auth.currentUser);
     const params = useLocalSearchParams();
+    const [isMatched, setIsMatched] = useState(false);
+    const [cardMatched, setCardMatched] = useState<any>(null);
     const { roomId } = params;
 
     const fetchMovies = async () => {
@@ -57,7 +61,6 @@ export default function Game() {
 
     const likeCard = async () => {
         if (!cards || !currentUser || !roomId) {
-            console.error('Données insuffisantes pour liker la carte.');
             return;
         }
 
@@ -66,7 +69,10 @@ export default function Game() {
         await addLikedMovie(currentUser.uid, roomId, cards[0]).then(() => {
             checkMatch(roomId, cards[0].id, currentUser.uid).then((isMatch) => {
                 if (isMatch) {
-                    Alert.alert('Match', 'Vous avez un match !');
+                    setIsMatched(true);
+                    setCardMatched(cards[0]);
+                    console.log('card matched:' + cards[0]);
+                    
                 }
             });
         }).catch((error) => {
@@ -75,9 +81,7 @@ export default function Game() {
     };
 
     const swipeCard = (direction: string) => {
-      if (!isCanSwipe) {
-        console.log('Impossible de swiper');
-        
+      if (!isCanSwipe) {    
         return;
       }
       
@@ -180,6 +184,32 @@ export default function Game() {
                     </TouchableOpacity>
                 </View>
             </View>
+            <Modal visible={isMatched} transparent={true}>
+            <Pressable
+                onPress={() => {
+                    Keyboard.dismiss();
+                }}
+                style={styles.modalOverlay}
+            >
+                <View style={styles.modalContainer}>
+                    <View style={styles.cardMatched}>
+                    {isMatched && cardMatched && (
+                        <View style={{width: '100%', height: '100%'}}>
+                            <Image source={{ uri: cardMatched.img }} style={{ flex:1, borderRadius: 10, resizeMode: 'cover', }} />
+                            <Text style={styles.filmTitle}>{cardMatched.title}</Text>
+                            <LottieView
+                                source={require('@/animation/hearth.json')}
+                                autoPlay
+                                loop
+                                style={styles.lottie}
+                            />
+                        </View>
+                    )}
+                    </View>
+                    <Buttons title="Continuer" onPress={() => setIsMatched(false)} />
+                </View>
+            </Pressable>
+        </Modal>
         </SafeAreaView>
     );
 }
@@ -190,7 +220,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   status: {
-    height: 150,
+    height: 100,
     justifyContent: 'center',
     alignItems: 'center',
     marginHorizontal: 20,
@@ -263,4 +293,38 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.7)',
+  },
+  modalContainer: {
+    display: 'flex',
+    flexDirection: 'column',
+    width: '90%',
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 20,
+    justifyContent: 'space-between',
+    position: 'relative',
+    height: '70%',
+    gap: 20,
+ },
+ cardMatched: {
+    flex: 1,
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginVertical: 10,
+ },
+ lottie: {
+    position: 'absolute',
+    left: '50%',
+    top: '50%',
+    transform: [{ translateX: -200 }, { translateY: -200 }],
+    zIndex: 10,
+    width: 400,
+    height: 400,
+ }
 });

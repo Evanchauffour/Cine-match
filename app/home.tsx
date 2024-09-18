@@ -43,10 +43,6 @@ export default function Home() {
                 title="Rejoindre un groupe"
                 onPress={() => setJoinGroupModalVisible(true)}
                 />
-                <Buttons
-                title="Game test"
-                onPress={() => router.push('/game')}
-                />
             </View>
         </View>
     </View>
