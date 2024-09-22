@@ -1,5 +1,5 @@
 import { auth, db } from '../firebaseConfig';
-import { collection, addDoc, serverTimestamp, onSnapshot, query, where, updateDoc, doc, getDocs, getDoc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, onSnapshot, query, where, updateDoc, doc, getDocs, getDoc, deleteDoc } from 'firebase/firestore';
 import { getUserDetails } from './user';
 
 export function generateRoomCode() {
@@ -95,3 +95,16 @@ export function getGroupUsers(roomId, callback) {
 
     return unsubscribe;
 }
+
+export async function leaveGroup(roomId, userId) {
+    try {
+        const q = query(collection(db, 'users_room'), where('roomId', '==', roomId), where('userId', '==', userId));
+        const querySnapshot = await getDocs(q);
+
+        const deletePromises = querySnapshot.docs.map(doc => deleteDoc(doc.ref));
+        await Promise.all(deletePromises);
+    } catch (error) {
+        console.error("Error leaving group: ", error);
+    }
+}
+

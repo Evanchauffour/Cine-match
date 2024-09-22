@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, Pressable, StyleSheet, Keyboard, Alert } from 'react-native';
 import Button from '../components/Button';
 import { RadioButton } from 'react-native-radio-buttons-group';

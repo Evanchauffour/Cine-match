@@ -2,9 +2,15 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, Animated, PanResponder, SafeAreaView, TouchableOpacity, Text, Image, Alert, Modal, Pressable, Keyboard } from 'react-native';
 import { addLikedMovie, checkMatch } from '../utils/game';
 import { auth } from '@/firebaseConfig';
-import { useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import Buttons from '@/components/Button';
 import LottieView from 'lottie-react-native';
+import { getGroupUsers, leaveGroup } from '../utils/room';
+
+interface User {
+    uid: string;
+    displayName: string;
+}
 
 export default function Game() {
     const [cards, setCards] = useState<{ id: number; title: string; img: string }[]>([]);
@@ -15,6 +21,7 @@ export default function Game() {
     const params = useLocalSearchParams();
     const [isMatched, setIsMatched] = useState(false);
     const [cardMatched, setCardMatched] = useState<any>(null);
+    const [groupUsers, setGroupUsers] = useState<User[]>([]);
     const { roomId } = params;
 
     const fetchMovies = async () => {
@@ -131,9 +138,61 @@ export default function Game() {
     })
 ).current;
 
+const handleLeaveGroup = async () => {
+    const confirmLeaveGroup = async () => {
+        try {
+            await leaveGroup(roomId, currentUser.uid);
+            router.push({ pathname: '/' });
+        } catch (error) {
+            console.error("Error while leaving the group:", error);
+        }
+    };
+
+    Alert.alert('Quitter le groupe', 'Êtes-vous sûr de vouloir quitter le groupe ?', [
+        {
+            text: 'Annuler',
+            onPress: () => console.log('Annuler'),
+        },
+        {
+            text: 'Quitter',
+            onPress: confirmLeaveGroup,
+        },
+    ]);
+};
+
+useEffect(() => {
+    if (!roomId) return;
+
+    const unsubscribe = getGroupUsers(roomId, (users: User[]) => {
+        setGroupUsers(prevUsers => {
+            console.log('users', users);
+            if (prevUsers.length > users.length) {
+                const usersWhoLeft = prevUsers.filter(prevUser => !users.some(user => user.uid === prevUser.uid));
+
+                if (usersWhoLeft.length > 0) {
+                    usersWhoLeft.forEach(user => {
+                        if(currentUser.uid !== user.uid && users.find(u => u.uid === currentUser.uid)) {
+                            Alert.alert(`${user.displayName} a quitté le groupe`);
+                        }
+                    });
+                }
+            }
+
+            return users;
+        });
+    });
+
+    return () => unsubscribe();
+}, [roomId]);
+
+
+
     return (
         <SafeAreaView style={styles.container}>
-            <View style={styles.status}></View>
+            <View style={styles.status}>
+                <Buttons title="Quitter" onPress={handleLeaveGroup} />
+                <Buttons title="Matches" onPress={() => console.log('Quitter le groupe')} icon='matchesIcon' buttonStyle={styles.allMatchesButton} textStyle={styles.textAllMatchesButton}/>
+            </View>
             <View style={styles.swiperContainer}>
                 {cards.length > 0 ? (
                     <View style={styles.swiper}>
@@ -180,11 +239,11 @@ export default function Game() {
                         <Image source={require('@/assets/images/crossIcon.png')} style={{ width: 30, height: 30 }} />
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.button} onPress={() => swipeCard('right')}>
-                        <Image source={require('@/assets/images/hearthIcon.png')} style={{ width: 30, height: 30 }} />
+                        <Image source={require('@/assets/images/heartIcon.png')} style={{ width: 30, height: 30 }} />
                     </TouchableOpacity>
                 </View>
             </View>
-            <Modal visible={isMatched} transparent={true}>
+            <Modal visible={isMatched} transparent={true} animationType="slide">
             <Pressable
                 onPress={() => {
                     Keyboard.dismiss();
@@ -195,14 +254,14 @@ export default function Game() {
                     <View style={styles.cardMatched}>
                     {isMatched && cardMatched && (
                         <View style={{width: '100%', height: '100%'}}>
-                            <Image source={{ uri: cardMatched.img }} style={{ flex:1, borderRadius: 10, resizeMode: 'cover', }} />
+                            <Image source={{ uri: cardMatched.img }} style={{ flex:1, borderRadius: 10, resizeMode: 'contain', }} />
                             <Text style={styles.filmTitle}>{cardMatched.title}</Text>
-                            <LottieView
-                                source={require('@/animation/hearth.json')}
-                                autoPlay
-                                loop
-                                style={styles.lottie}
-                            />
+                                <LottieView
+                                    source={require('@/animation/hearth.json')}
+                                    autoPlay
+                                    style={styles.lottie}
+                                    loop={false}
+                                />
                         </View>
                     )}
                     </View>
@@ -220,16 +279,25 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
   },
   status: {
-    height: 100,
-    justifyContent: 'center',
-    alignItems: 'center',
+    display: 'flex',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
     marginHorizontal: 20,
+    marginVertical: 20,
+  },
+  allMatchesButton: {
+    backgroundColor: '#831FE8',
+  },
+  textAllMatchesButton: {
+    color: 'white',
+    alignSelf: 'center',
   },
   swiperContainer: {
     flex: 1,
     alignItems: 'center',
-    marginVertical: 40,
-    marginHorizontal: 40,
+    marginVertical: 10,
+    marginHorizontal: 20,
     gap: 20,
   },
   swiper: {
@@ -322,9 +390,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: '50%',
     top: '50%',
-    transform: [{ translateX: -200 }, { translateY: -200 }],
+    transform: [{ translateX: -150 }, { translateY: -150 }],
     zIndex: 10,
-    width: 400,
-    height: 400,
+    width: 300,
+    height: 300,
  }
 });
