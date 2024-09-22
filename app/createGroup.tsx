@@ -160,7 +160,7 @@ const CreateGroup: React.FC = () => {
                         updateRoom(roomId, roomDetails?.category, true);
                     }
                 }}             
-                disabled={currentUser?.uid !== roomDetails?.createdBy}
+                disabled={currentUser?.uid !== roomDetails?.createdBy || groupUsers.length < 2}
             />
         </Pressable>
     );

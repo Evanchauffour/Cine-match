@@ -5,7 +5,7 @@ import { auth } from '@/firebaseConfig';
 import { router, useLocalSearchParams } from 'expo-router';
 import Buttons from '@/components/Button';
 import LottieView from 'lottie-react-native';
-import { getGroupUsers, leaveGroup } from '../utils/room';
+import { getGroupUsers, leaveGroup, deleteRoom } from '../utils/room';
 
 interface User {
     uid: string;
@@ -165,7 +165,6 @@ useEffect(() => {
 
     const unsubscribe = getGroupUsers(roomId, (users: User[]) => {
         setGroupUsers(prevUsers => {
-            console.log('users', users);
             if (prevUsers.length > users.length) {
                 const usersWhoLeft = prevUsers.filter(prevUser => !users.some(user => user.uid === prevUser.uid));
 
@@ -178,12 +177,24 @@ useEffect(() => {
                 }
             }
 
+            if (users.length === 0) {
+                deleteRoom(roomId)
+                    .then(() => {
+                        console.log(`Room ${roomId} supprimée car il n'y a plus d'utilisateurs.`);
+                    })
+                    .catch(error => {
+                        console.error("Erreur lors de la suppression de la room: ", error);
+                    });
+            }
+
             return users;
         });
     });
 
     return () => unsubscribe();
 }, [roomId]);
+
+
 
 
 

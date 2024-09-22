@@ -96,6 +96,11 @@ export function getGroupUsers(roomId, callback) {
     return unsubscribe;
 }
 
+export async function deleteRoom(roomId) {
+    const roomRef = doc(db, 'rooms', roomId);
+    await deleteDoc(roomRef);
+}
+
 export async function leaveGroup(roomId, userId) {
     try {
         const q = query(collection(db, 'users_room'), where('roomId', '==', roomId), where('userId', '==', userId));
