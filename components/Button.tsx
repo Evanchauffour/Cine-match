@@ -13,6 +13,7 @@ interface ButtonsProps {
 
 const iconMap: { [key: string]: any } = {
   matchesIcon: require('../assets/images/matchesIcon.png'),
+  heartIcon: require('../assets/images/heartIcon.png'),
 };
 
 const Buttons: React.FC<ButtonsProps> = ({ title, onPress, buttonStyle, textStyle , disabled, icon = undefined}) => {

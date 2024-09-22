@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, Animated, PanResponder, SafeAreaView, TouchableOpacity, Text, Image, Alert, Modal, Pressable, Keyboard } from 'react-native';
-import { addLikedMovie, checkMatch } from '../utils/game';
+import { addLikedMovie, checkMatch, getMatch, getUserLikes } from '../utils/game';
 import { auth } from '@/firebaseConfig';
 import { router, useLocalSearchParams } from 'expo-router';
 import Buttons from '@/components/Button';
@@ -25,6 +25,9 @@ export default function Game() {
     const [groupUsers, setGroupUsers] = useState<User[]>([]);
     const { roomId } = params;
     const [matchedMoviesModalVisible, setMatchedMoviesModalVisible] = useState(false);
+    const [likedMoviesModalVisible, setLikedMoviesModalVisible] = useState(false);
+    const [matchedMovies, setMatchedMovies] = useState<any[]>([]);
+    const [likedMovies, setLikedMovies] = useState<any[]>([]);
 
     const fetchMovies = async () => {
         const options = {
@@ -196,22 +199,42 @@ useEffect(() => {
     return () => unsubscribe();
 }, [roomId]);
 
+useEffect(() => {
 
+    const unsubscribe = getMatch(roomId, (movies) => {
+        console.log('movies', movies);
+        setMatchedMovies(movies);
+    });
 
+    return () => unsubscribe();
+}, [roomId]);
 
+useEffect(() => {
+
+    const unsubscribeLikedMovies = getUserLikes(currentUser.uid ,roomId, (movies) => {
+        console.log('movies', movies);
+        setLikedMovies(movies);
+    });
+
+    return () => unsubscribeLikedMovies();
+}, [roomId]);
 
     return (
         <>
         <SafeAreaView style={styles.container}>
             <View style={styles.status}>
                 <Buttons title="Quitter" onPress={handleLeaveGroup} />
-                <Buttons title="Matches" onPress={() => setMatchedMoviesModalVisible(true)} icon='matchesIcon' buttonStyle={styles.allMatchesButton} textStyle={styles.textAllMatchesButton}/>
+                <View>
+                    <Buttons title={`${matchedMovies.length} Matches`} onPress={() => setMatchedMoviesModalVisible(true)} icon='matchesIcon' buttonStyle={styles.allMatchesButton} textStyle={styles.textAllMatchesButton}/>
+                    <Buttons title="Likes" onPress={() => setMatchedMoviesModalVisible(true)} icon='heartIcon'/>
+                </View>
             </View>
             <View style={styles.swiperContainer}>
                 {cards.length > 0 ? (
                     <View style={styles.swiper}>
                         {cards.map((card, index) => {
                             const isTopCard = index === 0;
+                            const isSecondeCard = index === 1;
                             const animatedStyle = isTopCard
                                 ? {
                                     transform: [
@@ -233,12 +256,13 @@ useEffect(() => {
                                     style={[
                                         styles.cardContainer,
                                         animatedStyle,
-                                        { zIndex: cards.length - index },
+                                        (isTopCard || isSecondeCard) && styles.cardOnTop,
+                                        { zIndex: cards.length - index},
                                     ]}
                                     {...(isTopCard ? panResponder.panHandlers : {})}
                                 >
                                     <View style={styles.card}>
-                                        <Image source={{ uri: card.img }} style={{ flex: 1, borderRadius: 10 }} />
+                                        <Image source={{ uri: card.img }} style={{ flex: 1, borderRadius: 10, resizeMode: 'contain' }} />
                                         <Text style={styles.filmTitle}>{card.title}</Text>
                                     </View>
                                 </Animated.View>
@@ -287,7 +311,12 @@ useEffect(() => {
         <MatchedMoviesModal
             isModalVisible={matchedMoviesModalVisible}
             onClose={() => setMatchedMoviesModalVisible(false)}
-            roomId={roomId}
+            movies={matchedMovies}
+        />
+        <MatchedMoviesModal
+            isModalVisible={likedMoviesModalVisible}
+            onClose={() => setLikedMoviesModalVisible(false)}
+            movies={likedMovies}
         />
         </>
     );
@@ -308,6 +337,7 @@ const styles = StyleSheet.create({
   },
   allMatchesButton: {
     backgroundColor: '#831FE8',
+    marginBottom: 10,
   },
   textAllMatchesButton: {
     color: 'white',
@@ -335,7 +365,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     backgroundColor: 'white',
-    padding: 10,
+    padding: 12,
   },
   card: {
     display: 'flex',
@@ -352,6 +382,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 3.84,
     elevation: 5,
+  },
+  cardOnTop: {
+    backgroundColor: 'transparent',
   },
   filmTitle: {
     fontSize: 20,
@@ -390,7 +423,7 @@ const styles = StyleSheet.create({
   modalContainer: {
     display: 'flex',
     flexDirection: 'column',
-    width: '90%',
+    width: '85%',
     backgroundColor: 'white',
     borderRadius: 20,
     padding: 20,

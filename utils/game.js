@@ -1,5 +1,5 @@
 import { db } from '../firebaseConfig';
-import { collection, query, where, updateDoc, doc, getDocs } from 'firebase/firestore';
+import { collection, query, where, updateDoc, doc, getDocs, onSnapshot } from 'firebase/firestore';
 
 export async function addLikedMovie(userId, roomId, movie) {
     try {
@@ -30,37 +30,48 @@ export async function addLikedMovie(userId, roomId, movie) {
     }
 }
 
-export async function getMatch(roomId) {
-    
-    try {
-        const usersRoomRef = collection(db, 'users_room');
-        
-        const q = query(usersRoomRef, where('roomId', '==', roomId));
-        
-        const querySnapshot = await getDocs(q);
+export function getMatch(roomId, callback) {
+    const usersRoomRef = collection(db, 'users_room');
+    const q = query(usersRoomRef, where('roomId', '==', roomId));
 
+    const unsubscribe = onSnapshot(q, async (querySnapshot) => {
         if (querySnapshot.empty) {
-            throw new Error('Aucun utilisateur trouvé dans cette room');
+            callback([]);
+            return;
         }
 
         const usersRoom = querySnapshot.docs.map(doc => doc.data());
         
         const matchedMovies = usersRoom
-        .map(userRoom => userRoom.matchedMovies)
-        .filter(matchedMovies => matchedMovies);
-      
+            .map(userRoom => userRoom.matchedMovies)
+            .filter(movies => movies);
+
         const commonMovies = matchedMovies.reduce((acc, val) => {
             const accIds = acc.map(movie => movie.id);
             return val.filter(movie => accIds.includes(movie.id));
         });
-      
-        console.log('commonMovies', commonMovies);
-        
-        return commonMovies;
-    } catch (error) {
-        console.error('Erreur lors de la vérification des correspondances:', error);
-        return [];
-    }
+
+        callback(commonMovies);
+    });
+
+    return unsubscribe;
+}
+
+export function getUserLikes (userId, roomId, callback) {
+    const usersRoomRef = collection(db, 'users_room');
+    const q = query(usersRoomRef, where('userId', '==', userId), where('roomId', '==', roomId));
+
+    const unsubscribe = onSnapshot(q, async (querySnapshot) => {
+        if (querySnapshot.empty) {
+            callback([]);
+            return;
+        }
+
+        const userRoom = querySnapshot.docs[0].data();
+        callback(userRoom.matchedMovies || []);
+    });
+
+    return unsubscribe;
 }
 
 export async function checkMatch(roomId, likedMovieId, userId) {
