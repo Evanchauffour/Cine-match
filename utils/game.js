@@ -2,9 +2,6 @@ import { db } from '../firebaseConfig';
 import { collection, query, where, updateDoc, doc, getDocs } from 'firebase/firestore';
 
 export async function addLikedMovie(userId, roomId, movie) {
-    console.log('liked movie');
-    
-    
     try {
         const usersRoomRef = collection(db, 'users_room');
         
@@ -34,7 +31,6 @@ export async function addLikedMovie(userId, roomId, movie) {
 }
 
 export async function getMatch(roomId) {
-    console.log('Checking for matches...');
     
     try {
         const usersRoomRef = collection(db, 'users_room');
@@ -49,11 +45,16 @@ export async function getMatch(roomId) {
 
         const usersRoom = querySnapshot.docs.map(doc => doc.data());
         
-        const matchedMovies = usersRoom.map(userRoom => userRoom.matchedMovies).filter(matchedMovies => matchedMovies);
-        
-        const commonMovies = matchedMovies.reduce((acc, val) => acc.filter(v => val.includes(v)));
-        
-        console.log('commonMovies: ' + JSON.stringify(commonMovies));
+        const matchedMovies = usersRoom
+        .map(userRoom => userRoom.matchedMovies)
+        .filter(matchedMovies => matchedMovies);
+      
+        const commonMovies = matchedMovies.reduce((acc, val) => {
+            const accIds = acc.map(movie => movie.id);
+            return val.filter(movie => accIds.includes(movie.id));
+        });
+      
+        console.log('commonMovies', commonMovies);
         
         return commonMovies;
     } catch (error) {
@@ -63,8 +64,6 @@ export async function getMatch(roomId) {
 }
 
 export async function checkMatch(roomId, likedMovieId, userId) {
-    console.log('check match');
-    
     try {
         const usersRoomRef = collection(db, 'users_room');
         

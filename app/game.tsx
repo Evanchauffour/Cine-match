@@ -6,6 +6,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import Buttons from '@/components/Button';
 import LottieView from 'lottie-react-native';
 import { getGroupUsers, leaveGroup, deleteRoom } from '../utils/room';
+import MatchedMoviesModal from '../components/MatchedMoviesModal';
 
 interface User {
     uid: string;
@@ -23,6 +24,7 @@ export default function Game() {
     const [cardMatched, setCardMatched] = useState<any>(null);
     const [groupUsers, setGroupUsers] = useState<User[]>([]);
     const { roomId } = params;
+    const [matchedMoviesModalVisible, setMatchedMoviesModalVisible] = useState(false);
 
     const fetchMovies = async () => {
         const options = {
@@ -199,10 +201,11 @@ useEffect(() => {
 
 
     return (
+        <>
         <SafeAreaView style={styles.container}>
             <View style={styles.status}>
                 <Buttons title="Quitter" onPress={handleLeaveGroup} />
-                <Buttons title="Matches" onPress={() => console.log('Quitter le groupe')} icon='matchesIcon' buttonStyle={styles.allMatchesButton} textStyle={styles.textAllMatchesButton}/>
+                <Buttons title="Matches" onPress={() => setMatchedMoviesModalVisible(true)} icon='matchesIcon' buttonStyle={styles.allMatchesButton} textStyle={styles.textAllMatchesButton}/>
             </View>
             <View style={styles.swiperContainer}>
                 {cards.length > 0 ? (
@@ -281,6 +284,12 @@ useEffect(() => {
             </Pressable>
         </Modal>
         </SafeAreaView>
+        <MatchedMoviesModal
+            isModalVisible={matchedMoviesModalVisible}
+            onClose={() => setMatchedMoviesModalVisible(false)}
+            roomId={roomId}
+        />
+        </>
     );
 }
 

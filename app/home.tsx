@@ -7,7 +7,6 @@ import { View, StyleSheet, Text } from "react-native";
 export default function Home() {
 
   const [joinGroupModalVisible, setJoinGroupModalVisible] = useState(false);
-  const [createGroupModalVisible, setCreateGroupModalVisible] = useState(false);
 
   return (
     <>
